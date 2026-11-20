@@ -90,7 +90,7 @@ def main():
     ap.add_argument("--srt-only", action="store_true")
     a = ap.parse_args()
     proj = pathlib.Path(a.project).resolve()
-    rel = lambda p: p if pathlib.Path(p).is_absolute() else proj / p
+    rel = lambda p: pathlib.Path(p) if pathlib.Path(p).is_absolute() else proj / p
     timing = json.loads((proj / "audio" / "timing.json").read_text())
     out = rel(a.out); out.parent.mkdir(parents=True, exist_ok=True)
     if a.srt_only:

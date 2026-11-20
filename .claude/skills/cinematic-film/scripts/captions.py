@@ -35,9 +35,9 @@ def words_with_times(seg):
     return out
 
 
-def chunks_for(timing, style):
+def chunks_for(timing, style, portrait=False):
     """[{'words': [(w, t)], 't0', 't1'}], breaking at punctuation where possible."""
-    mx = MAX_WORDS[style]
+    mx = MAX_WORDS[style] if not portrait else min(3, MAX_WORDS[style])
     out = []
     for seg in timing["segments"]:
         ws = words_with_times(seg)
@@ -56,9 +56,11 @@ def chunks_for(timing, style):
 class Captions:
     def __init__(self, style, width, height, timing, fonts_dir=None):
         self.style, self.W, self.H = style, width, height
-        self.k = width / 1920.0
+        self.portrait = height > width
+        # portrait (9:16): size from the frame height so captions read on a phone, fewer words per chunk
+        self.k = height / 1920.0 * 1.25 if self.portrait else width / 1920.0
         self.res = Res(width / 3840.0, None, fonts_dir)
-        self.chunks = chunks_for(timing, style)
+        self.chunks = chunks_for(timing, style, self.portrait)
         self.surface = skia.Surface.MakeRaster(skia.ImageInfo.Make(width, height, skia.ColorType.kRGBA_8888_ColorType, skia.AlphaType.kPremul_AlphaType))
 
     def active(self, t):
@@ -82,7 +84,7 @@ class Captions:
         return txt.upper() if upper else txt
 
     def _highlighter(self, cv, c, t):
-        k = self.k; size = 66 * k; y = self.H * 0.897; f = "cond"
+        k = self.k; size = 66 * k; y = self.H * (0.79 if self.portrait else 0.897); f = "cond"
         words = [w.upper() for w, _ in c["words"]]
         gap = size * 0.28
         widths = [text_width(self.res, w, size, f, 0.03) for w in words]
