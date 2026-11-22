@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#000"><canvas id="c" width="1080" height="1920"></canvas>
+<script src="scene.js"></script><script src="videos.js"></script><script>
+const C=document.getElementById('c'),X=C.getContext('2d'),W=1080,H=1920,OR='#F97316';
+function capLines(text){X.font='800 66px Inter';const words=text.split(' ');const lines=[[]];words.forEach(w=>{const l=lines[lines.length-1];const tr=[...l,w].join(' ').replace(/\*/g,'');if(X.measureText(tr).width>880&&l.length){lines.push([w])}else l.push(w)});return lines;}
+function caption(caps,t){const c=caps.find(([a,b])=>t>=a&&t<b);if(!c)return;const[a,b,text]=c;const k=clamp((t-a)/0.18),o=clamp((b-t)/0.12);const lines=capLines(text);X.save();X.globalAlpha=Math.min(k,o);const sc=0.85+0.15*pop(k);X.translate(W/2,H*0.80);X.scale(sc,sc);
+X.font='800 66px Inter';const lh=84,ws=lines.map(l=>X.measureText(l.join(' ').replace(/\*/g,'')).width),pw=Math.max(...ws)+80,ph=lines.length*lh+40;
+X.shadowColor='rgba(0,0,0,0.5)';X.shadowBlur=24;X.fillStyle='rgba(14,14,14,0.9)';X.beginPath();X.roundRect(-pw/2,-ph/2,pw,ph,34);X.fill();X.shadowBlur=0;
+lines.forEach((l,i)=>{let x=-ws[i]/2;const y=-ph/2+20+lh*i+lh/2+4;X.textBaseline='middle';X.textAlign='left';l.forEach((w,j)=>{const acc=w.startsWith('*');const s=w.replace('*','')+(j<l.length-1?' ':'');X.fillStyle=acc?OR:'#fff';X.fillText(s,x,y);x+=X.measureText(s).width;});});X.restore();}
+function tag(i,t){const a=clamp(t/0.3);X.save();X.globalAlpha=a;X.font='700 34px Inter';const n=String(i+1).padStart(2,'0'),s=STYLES[i].name.toUpperCase();const w1=X.measureText(n+'  ').width,w2=X.measureText(s).width,pw=w1+w2+56;X.fillStyle='rgba(14,14,14,0.85)';X.beginPath();X.roundRect(W/2-pw/2,40,pw,62,31);X.fill();X.textBaseline='middle';X.textAlign='left';X.fillStyle=OR;X.fillText(n+'  ',W/2-pw/2+28,72);X.fillStyle='#fff';X.fillText(s,W/2-pw/2+28+w1,72);X.restore();}
+window.render=(i,t)=>{X.save();VIDEOS[i](X,W,H,t);X.restore();tag(i,t);caption(VIDEOS[i].caps,t);if(t>9.75){X.fillStyle=`rgba(0,0,0,${clamp((t-9.75)/0.25)})`;X.fillRect(0,0,W,H);}};
+window.frame=(i,t,q=0.9)=>{render(i,t);return C.toDataURL('image/jpeg',q)};
+Promise.all(['800 66px Inter','700 34px Inter','900 40px Inter','300 40px Inter','200 40px Inter','italic 900 40px "Archivo Black"','900 40px "Archivo Black"','700 40px "Comic Relief"','700 20px "DejaVu Sans Mono"','500 20px "DejaVu Sans Mono"','bold 10px "DejaVu Sans Mono"'].map(f=>document.fonts.load(f))).then(()=>{window.done=true});
+</script></body></html>
